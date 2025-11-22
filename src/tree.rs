@@ -339,6 +339,45 @@ mod geo_impls {
             ))
         }
     }
+
+    impl<T> Shape for (T, Polygon) {
+        fn contains_shape(&self, rhs: &Self) -> bool {
+            self.1.contains_shape(&rhs.1)
+        }
+
+        fn contains_point(&self, point: [f32; 2]) -> bool {
+            self.1.contains_point(point)
+        }
+
+        fn bounding_rect(&self) -> ([f32; 2], [f32; 2]) {
+            self.1.bounding_rect()
+        }
+
+        fn center_point(&self) -> [f32; 2] {
+            self.1.center_point()
+        }
+
+        fn area(&self) -> f32 {
+            self.1.area()
+        }
+    }
+
+    impl<T: Clone + Default> Tree<(T, Polygon)> {
+        pub fn from_polygon_id(mut value: Vec<(T, Polygon)>) -> Self {
+            value.sort_by(|l, r| {
+                r.1.unsigned_area()
+                    .partial_cmp(&l.1.unsigned_area())
+                    .unwrap()
+            });
+            Self::from((
+                value,
+                (
+                    T::default(),
+                    Polygon::new(geo::LineString::new(Vec::new()), Vec::new()),
+                ),
+            ))
+        }
+    }
 }
 
 #[cfg(test)]
